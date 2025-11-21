@@ -195,6 +195,7 @@
         let gameState = {
             bug: { x: 1, y: 1 },
             bunny: { x: 26, y: 29 },
+            bunnyHistory: [],
             carrots: [],
             collectedCarrots: new Set(),
             score: 0,
@@ -249,6 +250,7 @@
             gameState.gameRunning = true;
             gameState.carrots = [];
             gameState.collectedCarrots = new Set();
+            gameState.bunnyHistory = [];
 
             // Reset positions
             gameState.bug = { x: 1, y: 1 };
@@ -368,15 +370,24 @@
 
             if (possibleMoves.length === 0) return;
 
+            // Filter out recently visited positions to avoid oscillation
+            const recentPositions = gameState.bunnyHistory.slice(-3);
+            const freshMoves = possibleMoves.filter(move =>
+                !recentPositions.some(pos => pos.x === move.x && pos.y === move.y)
+            );
+
+            // Use fresh moves if available, otherwise allow revisiting
+            const movesToConsider = freshMoves.length > 0 ? freshMoves : possibleMoves;
+
             let chosenMove;
 
             switch(gameState.level) {
                 case 1: // Random movement
-                    chosenMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                    chosenMove = movesToConsider[Math.floor(Math.random() * movesToConsider.length)];
                     break;
 
                 case 2: // Basic evasion - move away from bug
-                    chosenMove = possibleMoves.sort((a, b) => {
+                    chosenMove = movesToConsider.sort((a, b) => {
                         const distA = Math.abs(a.x - gameState.bug.x) + Math.abs(a.y - gameState.bug.y);
                         const distB = Math.abs(b.x - gameState.bug.x) + Math.abs(b.y - gameState.bug.y);
                         return distB - distA; // Prefer farther distance
@@ -384,8 +395,14 @@
                     break;
 
                 case 3: // Smart evasion - BFS pathfinding to maximize distance
-                    chosenMove = getBestEvasionMove(possibleMoves);
+                    chosenMove = getBestEvasionMove(movesToConsider);
                     break;
+            }
+
+            // Track position history (keep last 4 positions)
+            gameState.bunnyHistory.push({ x: gameState.bunny.x, y: gameState.bunny.y });
+            if (gameState.bunnyHistory.length > 4) {
+                gameState.bunnyHistory.shift();
             }
 
             gameState.bunny = chosenMove;
