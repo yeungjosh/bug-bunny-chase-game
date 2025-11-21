@@ -377,7 +377,7 @@
             // Only avoid recent positions when bug is far (> 8 cells away)
             let movesToConsider = possibleMoves;
             if (distanceToBug > 8) {
-                const recentPositions = gameState.bunnyHistory.slice(-3);
+                const recentPositions = gameState.bunnyHistory.slice(-10);
                 const freshMoves = possibleMoves.filter(move =>
                     !recentPositions.some(pos => pos.x === move.x && pos.y === move.y)
                 );
@@ -404,9 +404,9 @@
                     break;
             }
 
-            // Track position history (keep last 4 positions)
+            // Track position history (keep last 12 positions)
             gameState.bunnyHistory.push({ x: gameState.bunny.x, y: gameState.bunny.y });
-            if (gameState.bunnyHistory.length > 4) {
+            if (gameState.bunnyHistory.length > 12) {
                 gameState.bunnyHistory.shift();
             }
 
