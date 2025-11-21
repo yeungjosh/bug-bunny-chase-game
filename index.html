@@ -370,14 +370,19 @@
 
             if (possibleMoves.length === 0) return;
 
-            // Filter out recently visited positions to avoid oscillation
-            const recentPositions = gameState.bunnyHistory.slice(-3);
-            const freshMoves = possibleMoves.filter(move =>
-                !recentPositions.some(pos => pos.x === move.x && pos.y === move.y)
-            );
+            // Check distance to bug
+            const distanceToBug = Math.abs(gameState.bunny.x - gameState.bug.x) +
+                                  Math.abs(gameState.bunny.y - gameState.bug.y);
 
-            // Use fresh moves if available, otherwise allow revisiting
-            const movesToConsider = freshMoves.length > 0 ? freshMoves : possibleMoves;
+            // Only avoid recent positions when bug is far (> 8 cells away)
+            let movesToConsider = possibleMoves;
+            if (distanceToBug > 8) {
+                const recentPositions = gameState.bunnyHistory.slice(-3);
+                const freshMoves = possibleMoves.filter(move =>
+                    !recentPositions.some(pos => pos.x === move.x && pos.y === move.y)
+                );
+                movesToConsider = freshMoves.length > 0 ? freshMoves : possibleMoves;
+            }
 
             let chosenMove;
 
